@@ -1,4 +1,6 @@
+Absolutely bro 😄. Here is the **complete README**, keeping your original README essentially intact and adding **only your Real-Time Energy Monitoring contribution** plus the necessary small roadmap/dashboard updates.
 
+````markdown
 # ⚡ RETROFITIQ
 
 ## HVAC Retrofit Recommendation & Decision-Support Engine
@@ -51,6 +53,12 @@ It evaluates combinations of retrofit measures, estimates their impact, scores t
 | Budget Feasibility | ✅ Done |
 | Streamlit Dashboard | ✅ Done |
 | Package-Level Decision Charts | ✅ Done |
+| Real-Time Energy Prediction | ✅ Prototype |
+| Energy Deviation Detection | ✅ Prototype |
+| Excess-Cost Calculation | ✅ Prototype |
+| Trend & Persistence Monitoring | ✅ Prototype |
+| Alert Engine | ✅ Prototype |
+| Telemetry Replay | ✅ Prototype |
 | Hugging Face AI Explanation Layer | 🔄 Integrated / Testing |
 | React Dashboard | ⏳ Future Enhancement |
 | Full Production Validation | ⏳ Planned |
@@ -231,6 +239,183 @@ Certain diagnosed problems can directly activate relevant retrofit candidates.
 | Sensor Mismatch       | Smart Controls      |
 
 AHU VFD and Chiller Optimization remain available as downstream retrofit candidates based on building and HVAC characteristics.
+
+---
+
+# 📡 Real-Time Energy Monitoring
+
+RetrofitIQ also includes a **real-time energy monitoring prototype** that analyzes building telemetry and detects abnormal energy consumption.
+
+The monitoring system compares **actual energy consumption** with the **expected energy consumption** predicted from building operating conditions.
+
+### Monitoring Pipeline
+
+```text
+Building Telemetry
+        ↓
+Data Preprocessing
+        ↓
+Expected Energy Prediction
+        ↓
+Actual vs Expected
+        ↓
+Deviation Detection
+        ↓
+Financial Impact
+        ↓
+Trend & Persistence Analysis
+        ↓
+Alert Generation
+        ↓
+Streamlit Dashboard
+```
+
+### Expected Energy Prediction
+
+The monitoring engine uses a **Random Forest Regressor** to predict expected building power consumption.
+
+The current model uses operational parameters such as:
+
+* HVAC load
+* Zone temperature
+* Temperature setpoints
+* Relative humidity
+* RTU operating conditions
+* Occupancy
+* Indoor/outdoor temperature
+* Time-related features
+
+The current prototype achieved:
+
+```text
+MAE: 3.31 kW
+R² : 0.812
+```
+
+These results are based on the current Bldg59 hourly telemetry dataset and should be interpreted as prototype results.
+
+### Actual vs Expected Energy
+
+For every incoming/replayed reading, RetrofitIQ calculates:
+
+```text
+Deviation % =
+(Actual Power − Expected Power)
+/
+Expected Power × 100
+```
+
+The monitoring status is classified as:
+
+| Deviation |     Status     |
+| --------: | :------------: |
+|     < 10% |     NORMAL     |
+|     ≥ 10% |      WATCH     |
+|     ≥ 20% |     WARNING    |
+|     ≥ 35% |    CRITICAL    |
+|    ≤ −10% | UNDER_EXPECTED |
+
+This allows the system to identify both excessive and lower-than-expected energy consumption.
+
+### Financial Impact
+
+The monitoring engine converts energy deviations into an estimated financial impact.
+
+```text
+Expected Cost =
+Expected Power × Hours × Tariff
+
+Actual Cost =
+Actual Power × Hours × Tariff
+
+Excess Cost =
+Actual Cost − Expected Cost
+```
+
+The current prototype uses a default electricity tariff of:
+
+```text
+₹9 / kWh
+```
+
+A positive excess cost represents additional expenditure relative to expected operation, while a negative value represents lower-than-expected expenditure.
+
+### Trend & Persistence Detection
+
+A single abnormal reading does not necessarily indicate a persistent operating issue.
+
+RetrofitIQ therefore monitors consecutive abnormal readings.
+
+Current prototype configuration:
+
+```text
+History Window: 5 readings
+Persistence Threshold: 3 consecutive abnormal readings
+```
+
+For example:
+
+```text
+Reading 1 → +10.98% → WATCH
+Reading 2 → +11.56% → WATCH
+Reading 3 → +13.34% → WATCH + PERSISTENT
+Reading 4 → +11.23% → WATCH + PERSISTENT
+```
+
+Persistence and severity are treated separately.
+
+For example, a deviation can be:
+
+```text
+WATCH + PERSISTENT
+```
+
+without automatically becoming `WARNING`.
+
+### Alert Generation
+
+The monitoring engine converts detected conditions into actionable alerts:
+
+```text
+NORMAL
+WATCH
+WARNING
+CRITICAL
+UNDER_EXPECTED
+```
+
+For persistent abnormal behavior, the alert also indicates that the deviation has continued across consecutive readings.
+
+### Telemetry Replay
+
+The current prototype uses the cleaned **Bldg59 Master Hourly** dataset as replayed telemetry.
+
+This allows the system to simulate incoming readings one at a time without requiring physical sensors.
+
+The replay demonstrates:
+
+* Normal operation
+* Lower-than-expected consumption
+* Excess consumption
+* Warning conditions
+* Persistent abnormal behavior
+* Alert generation
+
+> **The current implementation is a telemetry-replay prototype, not a live sensor deployment. The architecture can later be connected to BMS APIs, IoT sensors, databases, or streaming telemetry.**
+
+### Monitoring Dashboard
+
+The Streamlit dashboard displays:
+
+* Current Power
+* Expected Power
+* Deviation %
+* Expected Cost
+* Actual Cost
+* Excess / Saved Cost
+* Monitoring Status
+* Persistence
+* Active Alerts
 
 ---
 
@@ -507,7 +692,9 @@ The dashboard allows users to:
 6. 📦 Compare complete retrofit packages
 7. 💰 Review financial performance
 8. 🏆 View package rankings
-9. 🤖 Ask RetrofitIQ AI for an explanation
+9. 📡 Monitor current/replayed energy consumption
+10. 🚨 View energy deviations, financial impact and alerts
+11. 🤖 Ask RetrofitIQ AI for an explanation
 
 ---
 
@@ -630,6 +817,14 @@ flowchart TD
     RANK --> DASH["💻 Streamlit Dashboard"]
 
     DASH --> AI["🤖 Hugging Face Explanation Layer"]
+
+    TELEMETRY["📡 Historical / Replayed Telemetry"]
+    TELEMETRY --> MONITOR["🤖 Random Forest Expected Energy"]
+    MONITOR --> DEVIATION["📈 Actual vs Expected"]
+    DEVIATION --> COSTMON["💰 Excess / Saved Cost"]
+    DEVIATION --> TREND["🔄 Trend + Persistence"]
+    TREND --> ALERT["🚨 Alert Engine"]
+    ALERT --> DASH
 ```
 
 ---
@@ -681,10 +876,23 @@ RetrofitIQ/
 │   ├── cleaned/
 │   └── processed/
 │
+├── prediction/
+│   ├── __init__.py
+│   ├── config.py
+│   ├── data_loader.py
+│   ├── predictor.py
+│   ├── anomaly_detector.py
+│   ├── trend_monitor.py
+│   ├── alert_engine.py
+│   ├── monitoring_engine.py
+│   ├── realtime_simulator.py
+│   └── test_*.py
+│
 ├── src/
 │   └── Person D/
 │       ├── app.py
-│       └── llm_explainer.py
+│       ├── combiner.py
+│       └── maintenance.py
 │
 ├── models/
 │
@@ -722,7 +930,7 @@ RetrofitIQ/
 
 ## Engineering / Decision Logic
 
-**Python • Deterministic Scoring • Financial Calculations • HVAC Diagnostics**
+**Python • Deterministic Scoring • Financial Calculations • HVAC Diagnostics • Energy Monitoring • Anomaly Detection • Trend Monitoring**
 
 ---
 
@@ -753,6 +961,14 @@ streamlit run "src\Person D\app.py"
 ```
 
 The dashboard will open locally through Streamlit.
+
+### Run the Monitoring Test
+
+From the project root:
+
+```bat
+py -m prediction.test_monitoring
+```
 
 ---
 
@@ -821,6 +1037,10 @@ The dashboard will open locally through Streamlit.
 * [x] Package-level tooltips
 * [x] Financial analysis
 * [x] Selected package explanation
+* [x] Real-time energy monitoring dashboard
+* [x] Energy deviation display
+* [x] Financial impact display
+* [x] Alert display
 
 ## Phase 7 — AI Explanation
 
@@ -831,7 +1051,20 @@ The dashboard will open locally through Streamlit.
 * [x] Dashboard AI question panel
 * [ ] Full end-to-end LLM testing
 
-## Phase 8 — Future Development
+## Phase 8 — Real-Time Monitoring
+
+* [x] Expected energy prediction
+* [x] Actual vs expected deviation
+* [x] Excess-cost calculation
+* [x] Trend monitoring
+* [x] Persistence detection
+* [x] Alert engine
+* [x] Telemetry replay
+* [ ] Live sensor/API integration
+* [ ] Real-time streaming infrastructure
+* [ ] Production monitoring deployment
+
+## Phase 9 — Future Development
 
 * [ ] Larger validated retrofit dataset
 * [ ] Expanded model validation
@@ -886,6 +1119,7 @@ RetrofitIQ avoids:
 * ❌ Hardcoded recommendations
 * ❌ Unsupported climate claims
 * ❌ Presenting assumptions as measured results
+* ❌ Presenting historical telemetry replay as a live sensor feed
 
 ### 4. Package-Level Decision Making
 
@@ -894,6 +1128,26 @@ The final recommendation focuses on **complete retrofit packages**, not isolated
 ### 5. Prototype Transparency
 
 Where datasets are small or assumptions are required, the system clearly identifies the result as a prototype estimate rather than claiming field-level accuracy.
+
+### 6. Monitoring and Retrofit Decision Support
+
+The monitoring engine and retrofit recommendation engine serve different purposes.
+
+```text
+Monitoring
+    ↓
+Detect abnormal operation
+    ↓
+Quantify deviation and cost
+    ↓
+Generate alert
+    ↓
+Investigate operating condition
+    ↓
+Evaluate retrofit requirement
+```
+
+The monitoring engine does not automatically convert every anomaly into a retrofit recommendation.
 
 ---
 
@@ -905,11 +1159,16 @@ Important limitations include:
 
 * The primary empirical retrofit dataset is relatively small.
 * Energy savings predictions should be treated as estimates.
+* The real-time monitoring model is currently a prototype.
+* The monitoring system currently uses historical telemetry replay rather than a live sensor/API stream.
+* Expected-energy prediction performance may vary across buildings and operating conditions.
 * Full physics-based simulation is not currently used as the final engine.
 * Thermal comfort modelling does not currently implement complete PMV/PPD because clothing and metabolic inputs are unavailable.
 * Climate normalization is exploratory and not part of the final recommendation model.
 * Retrofit CAPEX values are prototype assumptions/reference rates.
-* The system requires further validation against larger real-world retrofit datasets.
+* The monitoring tariff is a configurable prototype assumption.
+* Alert thresholds require validation against real operational fault data.
+* The system requires further validation against larger real-world retrofit and telemetry datasets.
 * Production deployment and large-scale testing are future work.
 
 ---
@@ -927,13 +1186,13 @@ Important limitations include:
 
 # 🚀 RetrofitIQ
 
-## HVAC Data → Diagnostics → ML Prediction → Retrofit Packages → Impact Analysis → Ranking → Intelligent Explanation
+## HVAC Data → Diagnostics → ML Prediction → Retrofit Packages → Impact Analysis → Monitoring → Alerts → Ranking → Intelligent Explanation
 
 **🏆 Round 2 — Development in Progress**
 
 > **RetrofitIQ doesn't just ask how much energy a retrofit can save.**
 >
-> **It asks which retrofit package makes the most sense for the building — and why.**
+> **It also monitors building operation, compares actual energy against expected behavior, quantifies the financial impact of deviations, detects persistent abnormal consumption, and generates actionable alerts.**
 
-```
+```text
 ```
