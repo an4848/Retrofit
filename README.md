@@ -1,4 +1,3 @@
-Absolutely bro 😄. Here is the **complete README**, keeping your original README essentially intact and adding **only your Real-Time Energy Monitoring contribution** plus the necessary small roadmap/dashboard updates.
 
 ````markdown
 # ⚡ RETROFITIQ
@@ -67,34 +66,28 @@ It evaluates combinations of retrofit measures, estimates their impact, scores t
 
 # 🧠 System Overview
 
-```mermaid
-flowchart LR
-
-    A["🏢 Building & HVAC Inputs"]
-    B["🔍 Diagnostics"]
-    C["⚡ Energy Baseline"]
-    D["🤖 ML Savings Prediction"]
-    E["⚙️ Retrofit Candidates"]
-    F["📦 Package Generation"]
-    G["📊 Multi-Criteria Scoring"]
-    H["💰 Financial Analysis"]
-    I["🏆 Package Ranking"]
-    J["🤖 AI Explanation"]
-    K["💻 Streamlit Dashboard"]
-
-    A --> B
-    A --> C
-    C --> D
-    B --> E
-    D --> E
-    E --> F
-    F --> G
-    F --> H
-    G --> I
-    H --> I
-    I --> J
-    I --> K
-    J --> K
+```text
+Building & HVAC Inputs
+        ↓
+HVAC Diagnostics
+        ↓
+Energy Baseline
+        ↓
+ML Energy Savings Prediction
+        ↓
+Retrofit Candidates
+        ↓
+Retrofit Package Generation
+        ↓
+Multi-Criteria Scoring
+        ↓
+Financial Analysis
+        ↓
+Package Ranking
+        ↓
+AI Explanation
+        ↓
+Streamlit Dashboard
 ````
 
 ---
@@ -175,8 +168,6 @@ The current model uses:
 8. Zoning Optimization
 
 ### Target
-
-The model predicts:
 
 ```text
 Package Energy Savings %
@@ -785,46 +776,57 @@ Natural-Language Explanation
 
 RetrofitIQ intentionally combines machine learning with deterministic engineering logic.
 
-```mermaid
-flowchart TD
+```text
+             🏢 Building + HVAC Inputs
+                       │
+             ┌─────────┴─────────┐
+             ↓                   ↓
+       🔍 Diagnostics       ⚡ EUI Benchmark
+             │                   │
+             │                   ↓
+             │             🤖 Ridge ML
+             │                   │
+             └─────────┬─────────┘
+                       ↓
+              ⚙️ Retrofit Candidates
+                       ↓
+                📦 Retrofit Packages
+                       ↓
+        ┌──────────────┼──────────────┐
+        ↓              ↓              ↓
+     Energy         Comfort          Cost
+        │              │              │
+        └──────────────┼──────────────┘
+                       ↓
+            Sustainability + Maintenance
+                       ↓
+                 🏆 Final Score
+                       ↓
+                 🥇 Ranking
+                       ↓
+              💻 Streamlit Dashboard
+                       ↓
+                🤖 AI Explanation
+```
 
-    INPUT["🏢 Building + HVAC Inputs"]
+### Monitoring Architecture
 
-    INPUT --> DIAG["🔍 Diagnostic Rules"]
-    INPUT --> EUI["⚡ EUI Benchmarking"]
-
-    EUI --> ML["🤖 Ridge ML Model"]
-
-    DIAG --> CANDIDATES["⚙️ Retrofit Candidates"]
-    ML --> CANDIDATES
-
-    CANDIDATES --> PACKAGES["📦 Retrofit Packages"]
-
-    PACKAGES --> ENERGY["⚡ Energy"]
-    PACKAGES --> COMFORT["🌡️ Comfort"]
-    PACKAGES --> COST["💰 Cost Benefit"]
-    PACKAGES --> SUSTAIN["🌱 Sustainability"]
-    PACKAGES --> MAINT["🔧 Maintenance"]
-
-    ENERGY --> SCORE["🏆 Final Score"]
-    COMFORT --> SCORE
-    COST --> SCORE
-    SUSTAIN --> SCORE
-    MAINT --> SCORE
-
-    SCORE --> RANK["🥇 Package Ranking"]
-
-    RANK --> DASH["💻 Streamlit Dashboard"]
-
-    DASH --> AI["🤖 Hugging Face Explanation Layer"]
-
-    TELEMETRY["📡 Historical / Replayed Telemetry"]
-    TELEMETRY --> MONITOR["🤖 Random Forest Expected Energy"]
-    MONITOR --> DEVIATION["📈 Actual vs Expected"]
-    DEVIATION --> COSTMON["💰 Excess / Saved Cost"]
-    DEVIATION --> TREND["🔄 Trend + Persistence"]
-    TREND --> ALERT["🚨 Alert Engine"]
-    ALERT --> DASH
+```text
+📡 Historical / Replayed Telemetry
+                ↓
+      🤖 Expected Energy Model
+                ↓
+       Actual vs Expected
+                ↓
+       📈 Deviation Detection
+                ↓
+       💰 Financial Impact
+                ↓
+      🔄 Trend & Persistence
+                ↓
+          🚨 Alert Engine
+                ↓
+        💻 Dashboard
 ```
 
 ---
@@ -1194,5 +1196,5 @@ Important limitations include:
 >
 > **It also monitors building operation, compares actual energy against expected behavior, quantifies the financial impact of deviations, detects persistent abnormal consumption, and generates actionable alerts.**
 
-```text
+```
 ```
